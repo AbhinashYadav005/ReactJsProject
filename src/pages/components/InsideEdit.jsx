@@ -1,8 +1,10 @@
+import Navbar from "./Navbar"
 
 
 function InsideEdit(){
     return (
         <>
+        <Navbar />
         <div>
   <meta charSet="UTF-8" />
   <title>Edit Blog Post</title>
