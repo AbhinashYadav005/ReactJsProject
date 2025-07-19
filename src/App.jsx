@@ -21,7 +21,7 @@ function App() {
       <Route path='/edit' element={<Edit/>} />
       <Route path='/delete' element={<Delete/>} />
       <Route path='/blog' element={<Blog />} />
-      <Route path='/blog/single-page' element={<SinglePage />} />
+      <Route path='/blog/:id' element={<SinglePage />} />
       <Route path='/learning-usestate' element={<LearningUseState />} />
     </Routes>
     </BrowserRouter>
