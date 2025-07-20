@@ -1,105 +1,133 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-function CreateBlog({ onBlogCreated }) {
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    // Removed unused image state
-    const [previewUrl, setPreviewUrl] = useState("");
 
-    function handleImageChange(e) {
-        const file = e.target.files[0];
-        // setImage(file); // Removed unused image state
+function CreateBlog() {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [image, setImage] = useState("");
+  const [imageOption, setImageOption] = useState("url");
 
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            setPreviewUrl("");
-        }
+  const navigate = useNavigate();
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result); // store base64 string
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!title || !content || !image) {
+      alert("All fields are required.");
+      return;
     }
 
-    async function handleSubmit(e) {
-        e.preventDefault();
+    const newBlog = {
+      title,
+      content,
+      image
+    };
 
-        const formData = {
-            title,
-            content,
-            image: previewUrl  // Saving base64 image (simplified for mock API)
-        };
-
-        const response = await axios.post(
-            "https://687af3bbabb83744b7ee4a18.mockapi.io/blogs",
-            formData
-        );
-
-        if (response.status === 201) {
-            alert("Blog published!");
-            setTitle("");
-            setContent("");
-            // setImage(null); // Removed unused image state
-            setPreviewUrl("");
-            onBlogCreated();  // Refresh blog list
-        } else {
-            alert("Failed to publish blog.");
-        }
+    try {
+      await axios.post(
+        "https://687af3bbabb83744b7ee4a18.mockapi.io/blogs",
+        newBlog
+      );
+      navigate("/"); // Redirect after creation
+    } catch (error) {
+      alert("Failed to create blog.");
     }
+  }
 
-    return (
-        <div className="max-w-xl mx-auto bg-white rounded-xl shadow-md p-6 my-10">
-            <h1 className="text-2xl font-bold text-center mb-4">Create Your Blog Post</h1>
+  return (
+    <>
+      <div className="max-w-xl mx-auto p-4">
+        <h2 className="text-2xl font-bold mb-4">Create New Blog</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            className="w-full p-2 border rounded"
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
 
-            <form onSubmit={handleSubmit}>
+          <textarea
+            className="w-full p-2 border rounded"
+            rows="5"
+            placeholder="Content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          ></textarea>
+
+          <div>
+            <label className="font-medium block mb-2">Image Source:</label>
+            <div className="flex items-center space-x-4 mb-4">
+              <label>
                 <input
-                    type="text"
-                    placeholder="Blog Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    className="w-full border rounded-md px-4 py-2 mb-4"
-                />
-
-                <textarea
-                    placeholder="Write your blog content here..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                    rows="5"
-                    className="w-full border rounded-md px-4 py-2 mb-4"
-                />
-
-                <label htmlFor="imageInput" className="block bg-gray-100 border border-dashed border-gray-400 rounded-md py-4 text-center cursor-pointer hover:bg-gray-200 mb-4">
-                    📁 Choose Image From Computer
-                </label>
-
+                  type="radio"
+                  value="url"
+                  checked={imageOption === "url"}
+                  onChange={() => setImageOption("url")}
+                />{" "}
+                Use Image URL
+              </label>
+              <label>
                 <input
-                    type="file"
-                    id="imageInput"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                />
+                  type="radio"
+                  value="file"
+                  checked={imageOption === "file"}
+                  onChange={() => setImageOption("file")}
+                />{" "}
+                Upload From Device
+              </label>
+            </div>
 
-                {previewUrl && (
-                    <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="w-full rounded-md mb-4"
-                    />
-                )}
+            {imageOption === "url" ? (
+              <input
+                className="w-full p-2 border rounded"
+                type="text"
+                placeholder="Image URL"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+              />
+            ) : (
+              <input
+                className="w-full p-2 border rounded"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            )}
 
-                <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md"
-                >
-                    Publish Blog
-                </button>
-            </form>
-        </div>
-    );
+            {image && (
+              <img
+                src={image}
+                alt="Selected"
+                className="w-full h-auto rounded mt-4"
+              />
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 cursor-pointer"
+          >
+            Create Blog
+          </button>
+        </form>
+      </div>
+    </>
+  );
 }
 
 export default CreateBlog;

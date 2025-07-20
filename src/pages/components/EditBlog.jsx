@@ -1,70 +1,142 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
 
+function EditBlog() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-function EditBlog(){
-    return (
-        <>
-          <div className="bg-white p-8 overflow-auto mt-16 h-screen">
-            <h2 className="text-2xl mb-4">Blog List</h2>
-            {/* Classes Table */}
-            <div className="relative overflow-auto">
-              <div className="overflow-x-auto rounded-lg">
-                <table className="min-w-full bg-white border mb-20">
-                  <thead>
-                    <tr className="bg-[#2B4DC994] text-center text-xs md:text-sm font-thin text-white">
-                      <th className="p-0">
-                        <span className="block py-2 px-3 border-r border-gray-300">ID</span>
-                      </th>
-                      <th className="p-0">
-                        <span className="block py-2 px-3 border-r border-gray-300">Blog Name</span>
-                      </th>
-                      <th className="p-4 text-xs md:text-sm">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b text-xs md:text-sm text-center text-gray-800">
-                      <td className="p-2 md:p-4">01</td>
-                      <td className="p-2 md:p-4">Blog 1</td>
-                      <td className="relative p-2 md:p-4 flex justify-center space-x-2">
-                          <a href="/blog/inside-edit">
-                        <button className="bg-blue-500 text-white px-3 py-1 rounded-md text-xs md:text-sm cursor-pointer">Edit</button>
-                        </a>
-                        <a href="/delete">
-                        <button className="bg-red-500 text-white px-3 py-1 rounded-md text-xs md:text-sm cursor-pointer">Delete</button>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr className="border-b text-xs md:text-sm text-center text-gray-800">
-                      <td className="p-2 md:p-4">02</td>
-                      <td className="p-2 md:p-4">Blog 2</td>
-                      <td className="relative p-2 md:p-4 flex justify-center space-x-2">
-                      <a href="/blog/inside-edit">
-                        <button className="bg-blue-500 text-white px-3 py-1 rounded-md text-xs md:text-sm cursor-pointer">Edit</button>
-                        </a>
-                        <a href="/delete">
-                        <button className="bg-red-500 text-white px-3 py-1 rounded-md text-xs md:text-sm cursor-pointer">Delete</button>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr className="border-b text-xs md:text-sm text-center text-gray-800">
-                      <td className="p-2 md:p-4">03</td>
-                      <td className="p-2 md:p-4">Blog 3</td>
-                      <td className="relative p-2 md:p-4 flex justify-center space-x-2">
-                      <a href="/blog/inside-edit">
-                        <button className="bg-blue-500 text-white px-3 py-1 rounded-md text-xs md:text-sm cursor-pointer">Edit</button>
-                        </a>
-                        <a href="/delete">
-                        <button className="bg-red-500 text-white px-3 py-1 rounded-md text-xs md:text-sm cursor-pointer">Delete</button>
-                        </a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState("");
+  const [imageOption, setImageOption] = useState("url");
+
+  useEffect(() => {
+    async function fetchBlog() {
+      const response = await axios.get(`https://687af3bbabb83744b7ee4a18.mockapi.io/blogs/${id}`);
+      const blog = response.data;
+      setTitle(blog.title);
+      setSubtitle(blog.subtitle || ""); // Safe load
+      setDescription(blog.description);
+      setImage(blog.image);
+    }
+    fetchBlog();
+  }, [id]);
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    await axios.put(`https://687af3bbabb83744b7ee4a18.mockapi.io/blogs/${id}`, {
+      title,
+      subtitle,  // Include subtitle in update
+      description,
+      image,
+    });
+    navigate(`/`);
+  }
+
+  return (
+    <>
+      <div className="max-w-xl mx-auto p-4">
+        <h2 className="text-2xl font-bold mb-4">Edit Blog</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          <input
+            className="w-full p-2 border rounded"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Blog Title"
+            required
+          />
+
+          <input
+            className="w-full p-2 border rounded"
+            type="text"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
+            placeholder="Blog Subtitle"
+          />
+
+          <textarea
+            className="w-full p-2 border rounded"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Blog Content"
+            rows="5"
+            required
+          ></textarea>
+
+          <div>
+            <label className="font-medium block mb-2">Image Source:</label>
+            <div className="flex items-center space-x-4 mb-4">
+              <label>
+                <input
+                  type="radio"
+                  value="url"
+                  checked={imageOption === "url"}
+                  onChange={() => setImageOption("url")}
+                />{" "}
+                Use Image URL
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="file"
+                  checked={imageOption === "file"}
+                  onChange={() => setImageOption("file")}
+                />{" "}
+                Upload From Computer
+              </label>
             </div>
+
+            {imageOption === "url" ? (
+              <input
+                className="w-full p-2 border rounded"
+                type="text"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                placeholder="Image URL"
+              />
+            ) : (
+              <input
+                className="w-full p-2 border rounded"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            )}
+
+            {image && (
+              <img
+                src={image}
+                alt="Selected"
+                className="w-full h-auto rounded mt-4"
+              />
+            )}
           </div>
 
-        </>
-    )
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
+          >
+            Update Blog
+          </button>
+        </form>
+      </div>
+    </>
+  );
 }
 
-export default EditBlog
+export default EditBlog;
