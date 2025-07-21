@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, data } from "react-router-dom";
 
 function EditBlog() {
   const { id } = useParams();
@@ -14,7 +14,9 @@ function EditBlog() {
 
   useEffect(() => {
     async function fetchBlog() {
-      const response = await axios.get(`https://687af3bbabb83744b7ee4a18.mockapi.io/blogs/${id}`);
+      const response = await axios.get(
+        `https://687af3bbabb83744b7ee4a18.mockapi.io/blogs/${id}`
+      );
       const blog = response.data;
       setTitle(blog.title);
       setSubtitle(blog.subtitle || ""); // Safe load
@@ -39,11 +41,11 @@ function EditBlog() {
     e.preventDefault();
     await axios.put(`https://687af3bbabb83744b7ee4a18.mockapi.io/blogs/${id}`, {
       title,
-      subtitle,  // Include subtitle in update
+      subtitle, // Include subtitle in update
       description,
       image,
     });
-    navigate(`/`);
+    navigate(`/blog/${id}`);
   }
 
   return (
@@ -51,7 +53,6 @@ function EditBlog() {
       <div className="max-w-xl mx-auto p-4">
         <h2 className="text-2xl font-bold mb-4">Edit Blog</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-
           <input
             className="w-full p-2 border rounded"
             type="text"
